@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxi</title>
+    <style>
+        body{
+            font-family: "Helvetica Neue";
+            text-align: center;
+            background-color: rgb(255, 255, 255);
+        }
+        h1 {
+            font-size: 5vw;
+        }
+        #spiel {
+            display: table;
+            margin: auto;
+            border: 0.7vw solid black
+        }
+        .table-row {
+            display: table-row;
+        }
+        .table-cell-computer{
+            display: table-cell;
+            width: 6.5vw;
+            height: 6.5vw;
+            vertical-align: middle;
+            background-color: rgb(255, 255, 255);
+            border: 0.3vw solid black
+        }
+        .table-cell-mobile{
+            display: table-cell;
+            width: 18vw;
+            height: 18vw;
+            vertical-align: middle;
+            background-color: rgb(255, 255, 255);
+            border: 0.7vw solid black
+        }
+        .table-cell-computer img {
+            width: 6vw;
+        }
+        .table-cell-mobile img {
+            width: 16vw;
+        }
+        .blue {
+            background-color: rgb(80, 109, 204);
+        }
+        .start {
+            background-color:  rgb(172, 191, 255);
+        }
+        .goal {
+            background-color: rgb(136, 230, 136);
+        }
+        .won {
+            background-color: rgb(7, 102, 7);
+        }
+        .grid-parent {
+            display: flex;
+            justify-content: center; 
+        }
+        .grid-parent1{
+            display: flex;
+            justify-content: center; 
+            column-gap: 50px;
+        }
+        .no-select {
+            user-select: none;         
+            -webkit-user-select: none;  
+            -moz-user-select: none;     
+            -ms-user-select: none;      
+        }
+        .button-computer {
+            border: 0.3vw solid black;
+            width: 20vw;
+            height: 1.7vw;
+            font-size: 1.5vw;
+        }
+        .button-mobile {
+            border: 0.6vw solid black;
+            width: 40vw;
+            height: 7vw;
+            font-size: 5vw;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="spiel">
+        <div class = "table-row">
+            <div id = "00">
+                <img>
+            </div> 
+            <div id = "01">
+                <img>
+            </div> 
+            <div id = "02">
+                <img>
+            </div> 
+            <div id = "03">
+                <img>
+            </div> 
+            <div id = "04">
+                <img>
+            </div> 
+        </div>   
+        <div class = "table-row">
+            <div id = "10">
+                <img>
+            </div> 
+            <div id = "11">
+                <img>
+            </div> 
+            <div id = "12">
+                <img>
+            </div> 
+            <div id = "13">
+                <img>
+            </div> 
+            <div id = "14">
+                <img>
+            </div> 
+        </div>   
+        <div class = "table-row">
+            <div id = "20">
+                <img>
+            </div> 
+            <div id = "21">
+                <img>
+            </div> 
+            <div id = "22">
+                <img>
+            </div> 
+            <div id = "23">
+                <img>
+            </div> 
+            <div id = "24">
+                <img>
+            </div> 
+        </div> 
+        <div class = "table-row">
+            <div id = "30">
+                <img>
+            </div> 
+            <div id = "31">
+                <img>
+            </div> 
+            <div id = "32">
+                <img>
+            </div> 
+            <div id = "33">
+                <img>
+            </div> 
+            <div id = "34">
+                <img>
+            </div> 
+        </div>   
+        <div class = "table-row">
+            <div id = "40">
+                <img>
+            </div> 
+            <div id = "41">
+                <img>
+            </div> 
+            <div id = "42">
+                <img>
+            </div> 
+            <div id = "43">
+                <img>
+            </div> 
+            <div id = "44">
+                <img>
+            </div> 
+        </div>     
+    </div>
+    <div class='parent grid-parent1'>
+        <div id="text">total training: 0</div>
+        <div id="moves">current moves: 0</div>
+        <div id="average">Ao100 moves Index: 0</div>
+    </div>
+    <input type="range" id="slider" min="1" max="400" value="200" style="width: 40vw;">
+    <div class='parent grid-parent'>
+        <div id = "train" class="child no-select">start</div>
+        <div id = "single" class="child no-select">start</div>
+    </div>
+    <div class='parent grid-parent'>
+        <div id = "autotrain" class="child no-select">start</div>
+        <div id = "stop" class="child no-select">start</div>
+    </div>
+    <div class='parent grid-parent'>
+        <div id = "newpos" class="child no-select">start</div>
+        <div id = "reset" class="child no-select">start</div>
+    </div>
+<script>
+    const slider = document.getElementById("slider");
+    let Cd = 200.01
+    slider.addEventListener("input", () => {Cd = 400.01 - slider.value})
+
+    function stopper(condition){
+        return new Promise((resolve) => {
+            const intervall = setInterval(() => {
+                if (condition["value"]) {
+                    clearInterval(intervall);
+                    resolve();
+                }
+            }, Cd)
+        })
+    }
+    
+    class Umwelt{
+        constructor(){
+            this.position = [0, 0]
+            this.Agent
+            this.truereset()
+        }
+
+        setAgent(a){
+            this.Agent = a
+        }
+
+        getWon(){
+            return this.won
+        }
+
+        getPosition(){
+            return this.position
+        }
+
+        getPositionFromXY([x, y]){
+            return x + 5 * y
+        }
+
+        getXyFromPosition(pos){
+            let x = pos % 5
+            let y = Math.floor(pos / 5)
+            return [x, y] 
+        }
+
+        getPassengerposition(){
+            return this.passengerposition
+        }
+
+        generatePosition(){
+            return [Math.floor(Math.random() * 5), Math.floor(Math.random() * 5)]
+        }
+
+        getEnd(){
+            return this.end
+        }
+
+        getListfromIndex(index){
+            return [parseInt(index[0]), parseInt(index[1])]
+        }
+
+        getIndexfromList(list){
+            return "" + list[0] + list[1]
+        }
+
+        truereset(){
+            for (let i = 0; i < 5; i++){
+                for (let j = 0; j < 5; j++){
+                    document.getElementById("" + i + j).classList.remove("start")
+                    document.getElementById("" + i + j).classList.remove("goal")
+                    document.getElementById("" + i + j).classList.remove("won")
+                }
+            }
+            document.getElementById(this.getIndexfromList(this.position)).children[0].style.visibility = "hidden"
+            this.position = this.generatePosition()
+            this.passengerposition = Math.floor(Math.random() * 25)
+            this.end = this.passengerposition
+            while (this.passengerposition === this.end){
+                this.end = Math.floor(Math.random() * 25)
+            }
+        }
+
+        reset(){
+            this.won = false
+            document.getElementById(this.getIndexfromList(this.position)).children[0].style.visibility = "hidden"
+            this.position = this.generatePosition()
+            this.lastposition = structuredClone(this.position)
+            this.passengerposition = Math.floor(Math.random() * 25)
+            this.lastpassangerposition = this.passengerposition
+            this.end = this.passengerposition
+            while (this.passengerposition === this.end){
+                this.end = Math.floor(Math.random() * 25)
+            }
+            for (let i = 0; i < 5; i++){
+                for (let j = 0; j < 5; j++){
+                    document.getElementById("" + i + j).classList.remove("start")
+                    document.getElementById("" + i + j).classList.remove("goal")
+                    document.getElementById("" + i + j).classList.remove("won")
+                }
+            }
+            document.getElementById(this.getIndexfromList(this.getXyFromPosition(this.passengerposition))).classList.add("start")
+            document.getElementById(this.getIndexfromList(this.getXyFromPosition(this.end))).classList.add("goal")
+            document.getElementById(this.getIndexfromList(this.position)).children[0].src = "taxi.png"
+            document.getElementById(this.getIndexfromList(this.position)).children[0].style.visibility = "visible"
+            this.hasupdated = {"value": false}
+            this.hasmoved = {"value": false}
+            this.passengerpositionchange = false
+        }
+
+        initialdraw(){
+            for (let i = 0; i < 5; i++){
+                for (let j = 0; j < 5; j++){
+                    document.getElementById("" + i + j).classList.add("blue")
+                }
+            }
+        }
+
+        update(){
+            if (this.lastposition.toString() != this.position.toString()){
+                document.getElementById(this.getIndexfromList(this.lastposition)).children[0].style.visibility = "hidden"
+                document.getElementById(this.getIndexfromList(this.position)).children[0].style.visibility = "visible"
+                document.getElementById(this.getIndexfromList(this.position)).children[0].src = "taxi.png"
+            }
+            if (this.passengerpositionchange){
+                if (this.passangerposition < 25){
+                    document.getElementById(this.getIndexfromList(this.getXyFromPosition(this.passengerposition))).classList.add("start")
+                }
+                if (this.passangerposition === 25){
+                    document.getElementById(this.getIndexfromList(this.getXyFromPosition(this.lastpassangerposition))).classList.remove("start")
+                }
+                if (this.won){
+                    document.getElementById(this.getIndexfromList(this.getXyFromPosition(this.end))).classList.add("won")
+                    document.getElementById("text").textContent = "total training: " + this.Agent.getTotalTraining()
+                }
+                this.passengerpositionchange = false
+            }
+            document.getElementById("moves").textContent = "current moves: " + this.Agent.getCurrentMoves()
+            document.getElementById("average").textContent = "Ao100 moves Index: " + this.Agent.getAverageMoves()
+            this.hasupdated["value"] = true
+        }
+
+        async move(action){
+            let reward = -1
+            this.lastposition = structuredClone(this.position)
+            switch(action){
+                case 0:
+                    if (this.position[0] + 1 < 5){
+                        this.position = [this.position[0] + 1, this.position[1]]
+                    }
+                    break;
+                case 1:
+                    if (this.position[0] - 1 >= 0){
+                        this.position = [this.position[0] - 1, this.position[1]]
+                    }
+                    break;
+                case 2:
+                    if (this.position[1] + 1 < 5){
+                        this.position = [this.position[0], this.position[1] + 1]
+                    }
+                    break;
+                case 3:
+                    if (this.position[1] - 1 >= 0){
+                        this.position = [this.position[0], this.position[1] - 1]
+                    }
+                    break;
+                case 4:
+                    reward = -10
+                    if (this.passangerposition < 25 && this.position.toString() === this.getXyFromPosition(this.passengerposition).toString()){
+                        reward = 1
+                        this.lastpassangerposition = this.passangerposition
+                        this.passangerposition = 25
+                        this.passengerpositionchange = true
+                    }
+                    break;
+                case 5:
+                    reward = -10
+                    if (this.passangerposition === 25){
+                        reward = -1
+                        this.lastpassangerposition = this.passangerposition
+                        this.passangerposition = this.getPositionFromXY(this.position)
+                        this.passengerpositionchange = true
+                        if (this.passangerposition === this.end){
+                            reward = 50
+                            this.won = true
+                        }
+                    }
+                    break;
+            }
+            this.update()
+            await stopper(this.hasupdated)
+            this.hasupdated["value"] = false
+            return reward
+        }
+    }
+
+    class Agent{
+        constructor(umwelt){
+            this.Umwelt = umwelt
+            this.Umwelt.setAgent(this)
+            this.qTabelle = {}
+            this.alpha = 0.2
+            this.lamda = 0.6
+            this.learnprobability = 1
+            this.moves = []
+            this.reset()
+        }
+
+        getTotalTraining(){
+            return this.totaltraining
+        }
+
+        getCurrentMoves(){
+            return this.currentmoves
+        }
+
+        getAverageMoves(){
+            let total = 0
+            for (let i = 0; i < 100; i++){
+                total += this.moves[i]
+            }
+            return Math.round(total / (this.movesindex > 100 ? 100: this.movesindex + 1))
+        }
+
+        reset(){
+            for (let i = 0; i < 16250; i++){
+                this.qTabelle[i] = [0, 0, 0, 0, 0, 0]
+            }
+            for (let i = 0; i < 100; i++){
+                this.moves[i] = 0
+            }
+            this.movesindex = 0
+            this.totaltraining = 0
+            this.currentmoves = 0
+        }
+
+        async move(){
+            let x = Math.random()
+            let laststate = this.iToValue(this.Umwelt.getPosition()[0], this.Umwelt.getPosition()[1], this.Umwelt.getPassengerposition(), this.Umwelt.getEnd())
+            let newstate
+            if (x > this.learnprobability){
+                let m = this.qTabelle[laststate].reduce((maxIdx, current, i, array) => current > array[maxIdx] ? i : maxIdx, 0)
+                let r = await this.Umwelt.move(m)
+                newstate = this.iToValue(this.Umwelt.getPosition()[0], this.Umwelt.getPosition()[1], this.Umwelt.getPassengerposition(), this.Umwelt.getEnd())
+                this.qTabelle[laststate][m] = (1 - this.alpha) * this.qTabelle[laststate][m] + this.alpha * (r + this.lamda * Math.max(...this.qTabelle[newstate]))
+                return
+            }
+            else{
+                let m = Math.floor(Math.random() * 6)
+                let r = await this.Umwelt.move(m)
+                newstate = this.iToValue(this.Umwelt.getPosition()[0], this.Umwelt.getPosition()[1], this.Umwelt.getPassengerposition(), this.Umwelt.getEnd())
+                this.qTabelle[laststate][m] = (1 - this.alpha) * this.qTabelle[laststate][m] + this.alpha * (r + this.lamda * Math.max(...this.qTabelle[newstate]))
+                return
+            }
+        }
+
+        async train(repetions){
+            for (let i = 0; i < repetions; i++){
+                this.Umwelt.reset()
+                this.totaltraining += 1
+                this.currentmoves = 0
+                while(!this.Umwelt.getWon()){
+                    this.currentmoves += 1
+                    this.moves[this.movesindex % 100] = this.currentmoves
+                    this.getAverageMoves()
+                    await this.move()
+                }
+                this.learnprobability *= 0.95
+                this.movesindex += 1
+            }
+            return
+        }
+
+        iToValue(taxirow, taxicolumn, passangerposition, endpostion){
+            return taxirow + 5 * taxicolumn + passangerposition * 25 + endpostion * 650
+        }
+    }
+
+    function isMobile() {
+        return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    if(isMobile()){
+        for (let i = 0; i < 5; i++){
+            for (let j = 0; j < 5; j++){
+                document.getElementById("" + i + j).classList.add("table-cell-mobile")
+            }
+        }
+        document.getElementById("newpos").classList.add("button-mobile")
+        document.getElementById("train").classList.add("button-mobile")
+        document.getElementById("autotrain").classList.add("button-mobile")
+        document.getElementById("stop").classList.add("button-mobile")
+        document.getElementById("single").classList.add("button-mobile")
+        document.getElementById("reset").classList.add("button-mobile")
+        document.getElementById("slider").style.width = `80vw`
+        document.getElementById("slider").style.height = `5vw`
+    }
+    else{
+        for (let i = 0; i < 5; i++){
+            for (let j = 0; j < 5; j++){
+                document.getElementById("" + i + j).classList.add("table-cell-computer")
+            }
+        }
+        document.getElementById("newpos").classList.add("button-computer")
+        document.getElementById("train").classList.add("button-computer")
+        document.getElementById("autotrain").classList.add("button-computer")
+        document.getElementById("stop").classList.add("button-computer")
+        document.getElementById("single").classList.add("button-computer")
+        document.getElementById("reset").classList.add("button-computer")
+    }
+
+    let e = new Umwelt()
+    let x = new Agent(e)
+    let autotrainx = false
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function removeAll(){
+        document.getElementById("train").removeEventListener("click", train)
+        document.getElementById("single").removeEventListener("click", single)
+        document.getElementById("autotrain").removeEventListener("click", autotrain)
+        document.getElementById("newpos").removeEventListener("click", newpos)
+        document.getElementById("reset").removeEventListener("click", reset)
+    }
+
+    function addAll(){
+        document.getElementById("train").addEventListener("click", train)
+        document.getElementById("single").addEventListener("click", single)
+        document.getElementById("autotrain").addEventListener("click", autotrain)
+        document.getElementById("newpos").addEventListener("click", newpos)
+        document.getElementById("reset").addEventListener("click", reset)
+    }
+
+    async function buttoncolour(id){
+        document.getElementById(id).style.backgroundColor = "black"
+        await sleep(60)
+        document.getElementById(id).style.backgroundColor = "white"
+    }
+
+    async function train(){  
+        buttoncolour("train")
+        removeAll()
+        await x.train(20)
+        addAll()
+    }
+
+    async function single() { 
+        buttoncolour("single")
+        removeAll()
+        await x.train(1)
+        addAll()
+    }
+
+    async function autotrain() {
+        buttoncolour("autotrain")
+        removeAll()
+        autotrainx = true
+        while (autotrainx){
+            await x.train(1)
+        }
+        addAll()
+    }
+
+    function stop(){
+        buttoncolour("stop")
+        autotrainx = false
+    }
+
+    function reset(){
+        buttoncolour("reset")
+        document.getElementById("text").textContent = "total training: 0"
+        document.getElementById("moves").textContent = "current moves: 0"
+        document.getElementById("average").textContent = "Ao100 moves Index: 0"
+        x.reset()
+    }
+
+    function newpos(){
+        buttoncolour("newpos")
+        e.truereset()
+        e.initialdraw()
+        reset()
+    }
+
+    function start(){
+        buttoncolour("train")
+        buttoncolour("single")
+        buttoncolour("autotrain")
+        buttoncolour("stop")
+        buttoncolour("newpos")
+        buttoncolour("reset")
+        document.getElementById("newpos").textContent = "new positions"
+        document.getElementById("train").textContent = "train(20)"
+        document.getElementById("autotrain").textContent = "autotrain"
+        document.getElementById("stop").textContent = "stop autotrain"
+        document.getElementById("single").textContent = "single"
+        document.getElementById("reset").textContent = "reset q-Table"
+        document.getElementById("train").removeEventListener("click", start)
+        document.getElementById("single").removeEventListener("click", start)
+        document.getElementById("autotrain").removeEventListener("click", start)
+        document.getElementById("newpos").removeEventListener("click", start)
+        document.getElementById("reset").removeEventListener("click", start)
+        document.getElementById("stop").removeEventListener("click", start)
+        document.getElementById("stop").addEventListener("click", stop)
+        addAll()
+        e.initialdraw()
+    }
+
+    document.getElementById("newpos").addEventListener("click", start)
+    document.getElementById("train").addEventListener("click", start)
+    document.getElementById("autotrain").addEventListener("click", start)
+    document.getElementById("stop").addEventListener("click", start)
+    document.getElementById("single").addEventListener("click", start)
+    document.getElementById("reset").addEventListener("click", start)
+</script>
+</body>
+</html>
