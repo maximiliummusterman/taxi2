@@ -359,10 +359,10 @@
                     break;
                 case 4:
                     reward = -10
-                    if (this.passangerposition < 25 && this.position.toString() === this.getXyFromPosition(this.passengerposition).toString()){
+                    if (this.passengerposition < 25 && this.position.toString() === this.getXyFromPosition(this.passengerposition).toString()){
                         reward = 1
-                        this.lastpassangerposition = this.passangerposition
-                        this.passangerposition = 25
+                        this.lastpassangerposition = this.passengerposition
+                        this.passengerposition = 25
                         this.passengerpositionchange = true
                     }
                     break;
