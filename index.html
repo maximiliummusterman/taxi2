@@ -319,7 +319,7 @@
                 if (this.passangerposition < 25){
                     document.getElementById(this.getIndexfromList(this.getXyFromPosition(this.passengerposition))).classList.add("start")
                 }
-                if (this.passangerposition === 25){
+                if (this.passengerposition === 25){
                     document.getElementById(this.getIndexfromList(this.getXyFromPosition(this.lastpassangerposition))).classList.remove("start")
                 }
                 if (this.won){
@@ -368,12 +368,12 @@
                     break;
                 case 5:
                     reward = -10
-                    if (this.passangerposition === 25){
+                    if (this.passengerposition === 25){
                         reward = -1
-                        this.lastpassangerposition = this.passangerposition
-                        this.passangerposition = this.getPositionFromXY(this.position)
+                        this.lastpassangerposition = this.passengerposition
+                        this.passengerposition = this.getPositionFromXY(this.position)
                         this.passengerpositionchange = true
-                        if (this.passangerposition === this.end){
+                        if (this.passengerposition === this.end){
                             reward = 50
                             this.won = true
                         }
